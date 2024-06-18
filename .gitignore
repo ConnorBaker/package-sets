@@ -1,0 +1,15 @@
+# DirEnv
+.direnv
+
+# Nix
+result
+result-*
+
+# parsek-warp generated kernels
+cache
+
+# CMake
+build
+
+# Python
+__pycache__
