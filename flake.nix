@@ -22,53 +22,68 @@
   outputs =
     inputs:
     inputs.flake-parts.lib.mkFlake { inherit inputs; } {
-      debug = true;
-      systems = [ "x86_64-linux" ];
+      systems = [
+        "x86_64-linux"
+        "aarch64-linux"
+        "x86_64-darwin"
+        "aarch64-darwin"
+      ];
+
       imports = [
         inputs.git-hooks-nix.flakeModule
         inputs.treefmt-nix.flakeModule
         ./flake-module.nix
       ];
 
-      flake.flakeModule = ./flake-module.nix;
+      flake =
+        { config, ... }:
+        {
+          flakeModule = config.flakeModules.default;
+          flakeModules.default = ./flake-module.nix;
+        };
+
+      packageSets = {
+        nixpkgs = {
+          enable = true;
+          setModulePkgsArg = true;
+        };
+        strategies = {
+          packages.enable = true;
+          packages2 =
+            { config, ... }:
+            {
+              enable = true;
+              directory = ./packages2;
+              # Can specify the overlay manually to change the package set attribute path,
+              # or the way the overlay is created.
+              overlay = final: prev: {
+                cool.new.scope = prev.lib.filesystem.packagesFromDirectoryRecursive {
+                  inherit (final) callPackage;
+                  inherit (config) directory;
+                };
+              };
+              packageSetAttributePath = [
+                "cool"
+                "new"
+                "scope"
+              ];
+            };
+          packages3 = {
+            enable = true;
+            addToOverlays = false;
+            directory = ./packagesHidingInHere/packages3;
+            # No need to specify the overlay if we're adding directly to the package set
+            # overlay = final: prev: prev.lib.filesystem.packagesFromDirectoryRecursive {
+            #   inherit (final) callPackage;
+            #   inherit (config) directory;
+            # };
+          };
+        };
+      };
 
       perSystem =
         { config, ... }:
         {
-          package-sets.strategies = {
-            packages.enable = true;
-            packages2 =
-              { config, ... }:
-              {
-                enable = true;
-                directory = ./packages2;
-                overlay = final: prev: {
-                  cool.new.scope = prev.lib.filesystem.packagesFromDirectoryRecursive {
-                    inherit (final) callPackage;
-                    inherit (config) directory;
-                  };
-                };
-                packageSetAttributePath = [
-                  "cool"
-                  "new"
-                  "scope"
-                ];
-              };
-            packages3 =
-              { config, ... }:
-              {
-                enable = true;
-                directory = ./packagesHidingInHere/packages3;
-                overlay = final: prev: {
-                  hiding = prev.lib.filesystem.packagesFromDirectoryRecursive {
-                    inherit (final) callPackage;
-                    inherit (config) directory;
-                  };
-                };
-                packageSetAttributePath = [ "hiding" ];
-              };
-          };
-
           pre-commit.settings.hooks = {
             nil.enable = true;
             treefmt = {
