@@ -135,17 +135,19 @@ in
     python-packages =
       { config, ... }:
       {
-        overlay = _: prev: {
-          pythonPackagesExtensions = prev.pythonPackagesExtensions ++ [
-            (
-              pythonFinal: _:
-              prev.lib.filesystem.packagesFromDirectoryRecursive {
-                inherit (pythonFinal) callPackage;
-                inherit (config) directory;
-              }
-            )
-          ];
-        };
+        overlay = mkDefault (
+          _: prev: {
+            pythonPackagesExtensions = prev.pythonPackagesExtensions ++ [
+              (
+                pythonFinal: _:
+                prev.lib.filesystem.packagesFromDirectoryRecursive {
+                  inherit (pythonFinal) callPackage;
+                  inherit (config) directory;
+                }
+              )
+            ];
+          }
+        );
         packageSetAttributePath = mkDefault [ "python3Packages" ];
       };
   };
