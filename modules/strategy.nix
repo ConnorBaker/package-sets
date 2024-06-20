@@ -8,6 +8,7 @@ let
     nonEmptyStr
     pathInStore
     raw
+    uniq
     ;
 in
 {
@@ -98,7 +99,7 @@ in
         The attribute path to a package set created by
         [`overlay`](#opt-packageSets.strategies._name_.overlay).
       '';
-      type = listOf nonEmptyStr;
+      type = uniq (listOf nonEmptyStr);
       default = [ ];
       example = [ "python312Packages" ];
     };
