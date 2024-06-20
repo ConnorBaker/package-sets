@@ -6,6 +6,7 @@
 { config, lib, ... }:
 let
   inherit (lib.attrsets) attrValues mapAttrs;
+  inherit (lib.modules) mkDefault;
   inherit (lib.options) literalMD mkOption;
   inherit (lib.trivial) const;
   inherit (lib.types)
@@ -98,25 +99,8 @@ in
           })
         ];
       });
-      default = {
-        packages = { };
-        python-packages =
-          { config, ... }:
-          {
-            overlay = _: prev: {
-              pythonPackagesExtensions = prev.pythonPackagesExtensions ++ [
-                (
-                  pythonFinal: _:
-                  prev.lib.filesystem.packagesFromDirectoryRecursive {
-                    inherit (pythonFinal) callPackage;
-                    inherit (config) directory;
-                  }
-                )
-              ];
-            };
-            packageSetAttributePath = [ "python3Packages" ];
-          };
-      };
+      default = { };
+      # NOTE: When updating `config.strategies` below, make sure to strip mkDefault as it is an implementation detail.
       defaultText = literalMD ''
         ```nix
         {
@@ -141,5 +125,28 @@ in
         ```
       '';
     };
+  };
+  # NOTE: We must define the default values here, as the merging behavior is different when these values are provided
+  # in `default`. As an example, if these values were provided by `default`, setting `python-packages.enable = true;`
+  # sets `overlay`, `packageSetAttributePath`, and all the other fields back to their default values, rather than
+  # using the other values provide by the `default` value.
+  config.strategies = {
+    packages = { };
+    python-packages =
+      { config, ... }:
+      {
+        overlay = _: prev: {
+          pythonPackagesExtensions = prev.pythonPackagesExtensions ++ [
+            (
+              pythonFinal: _:
+              prev.lib.filesystem.packagesFromDirectoryRecursive {
+                inherit (pythonFinal) callPackage;
+                inherit (config) directory;
+              }
+            )
+          ];
+        };
+        packageSetAttributePath = mkDefault [ "python3Packages" ];
+      };
   };
 }
