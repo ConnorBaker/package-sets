@@ -67,6 +67,11 @@ in
         When this module is enabled, this module additionally provides the ability to set the
         [`pkgs`](../module-arguments.html#pkgs) argument, ensuring that the changes made by
         [`strategies`](#opt-packageSets.strategies) are available to other modules.
+
+        Regardless of this module being enabled, the overlays provided to
+        [`extraOverlays`](#opt-packageSets.nixpkgs.extraOverlays) are never included in the overlays expose in
+        [`flake.overlays`](../options/flake-parts.html#opt-flake.overlays). This is to prevent overlays necessitated
+        by the current flake from being unintentionally propagated to other flakes.
       '';
       default = { };
       type = submoduleWith { modules = [ (importApply ./nixpkgs.nix { inherit inputs mkOptions; }) ]; };
