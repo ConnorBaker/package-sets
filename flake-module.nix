@@ -18,7 +18,7 @@
         description = "The project-level [`packageSets`](#opt-packageSets) configuration.";
         default = { };
         type = submoduleWith {
-          modules = [ (importApply ./modules/package-sets.nix { inherit inputs importApply self; }) ];
+          modules = [ (importApply ./modules/packageSets.nix { inherit inputs importApply self; }) ];
         };
       };
     };
