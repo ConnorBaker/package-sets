@@ -90,7 +90,9 @@ in
         - are used in overlaying an instance of Nixpkgs as described by the options in
           [`nixpkgs`](#opt-packageSets.nixpkgs)
         - create an overlay in [`flake.overlays`](../options/flake-parts.html#opt-flake.overlays) of the same name as
-          the strategy
+          the strategy, which is the composition of [`preOverlays`](#opt-packageSets.strategies._name_.preOverlays),
+          [`overlay`](#opt-packageSets.strategies._name_.overlay), and
+          [`postOverlays`](#opt-packageSets.strategies._name_.postOverlays)
         - create an overlay [`flake.overlays.default`](../options/flake-parts.html#opt-flake.overlays) which is the
           composition of all other overlays, to ease consumption
         - populate [`perSystem.packages`](../options/flake-parts.html#opt-perSystem.packages) with the packages from

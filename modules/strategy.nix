@@ -57,6 +57,26 @@ in
       default = "${projectRoot}/${config._module.args.name}";
       defaultText = "‹self›/‹name›";
     };
+    preOverlays = {
+      description = ''
+        Additional overlays to be used in the extension or creation of a Nixpkgs instance in
+        [`nixpkgs`](#opt-packageSets.nixpkgs), applied before [`overlay`](#opt-packageSets.strategies._name_.overlay).
+
+        This separation is useful when additional overlays are required to add patches or fixups.
+      '';
+      type = listOf raw;
+      default = [ ];
+    };
+    postOverlays = {
+      description = ''
+        Additional overlays to be used in the extension or creation of a Nixpkgs instance in
+        [`nixpkgs`](#opt-packageSets.nixpkgs), applied after [`overlay`](#opt-packageSets.strategies._name_.overlay).
+
+        This separation is useful when additional overlays are required to add patches or fixups.
+      '';
+      type = listOf raw;
+      default = [ ];
+    };
     overlay = {
       description = ''
         An overlay to be used in the extension or creation of a Nixpkgs instance in

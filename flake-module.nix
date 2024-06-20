@@ -35,11 +35,12 @@
         filterAttrs
         genAttrs
         getAttrFromPath
-        mapAttrsToList
+        mapAttrs
         optionalAttrs
         ;
       inherit (lib.filesystem) packagesFromDirectoryRecursive;
       inherit (lib.fixedPoints) composeManyExtensions;
+      inherit (lib.lists) concatLists;
       inherit (lib.modules) mkIf;
 
       # Retrieve the packages added by an overlay from a package set
@@ -54,6 +55,8 @@
         in
         genAttrs (attrNames entries) (name: getAttrFromPath (packageSetAttributePath ++ [ name ]) pkgs);
 
+      # Filters out strategies that are not enabled.
+      # In this instance, enabled means the strategy name isn't a reserved value and the directory exists.
       enabledStrategies = filterAttrs (
         name:
         assert assertMsg (
@@ -65,13 +68,27 @@
         ) "packageSets.strategies: ${name} is enabled but provided directory does not exist: ${directory}.";
         enable
       ) config.packageSets.strategies;
+
+      # Maps strategy name to the list of overlays to apply.
+      strategyOverlays = mapAttrs (
+        _:
+        {
+          preOverlays,
+          overlay,
+          postOverlays,
+          ...
+        }:
+        preOverlays ++ [ overlay ] ++ postOverlays
+      ) enabledStrategies;
+
     in
     mkIf config.packageSets.enable {
       flake.overlays =
         let
           overlaysToAddToFlake = concatMapAttrs (
-            name: { addToOverlays, overlay, ... }: optionalAttrs addToOverlays { ${name} = overlay; }
-          ) enabledStrategies;
+            name: overlays:
+            optionalAttrs enabledStrategies.${name}.addToOverlays { ${name} = composeManyExtensions overlays; }
+          ) strategyOverlays;
         in
         overlaysToAddToFlake // { default = composeManyExtensions (attrValues overlaysToAddToFlake); };
 
@@ -86,7 +103,7 @@
             setModulePkgsArg
             ;
 
-          enabledOverlays = mapAttrsToList (_: { overlay, ... }: overlay) enabledStrategies;
+          enabledOverlays = concatLists (attrValues strategyOverlays);
 
           pkgs' =
             if enable then
